@@ -18,7 +18,7 @@ steps:
       - '-c'
       - |
         source workspace_env.sh
-        echo "🚀 Deploying to Environment: $TARGET_ENV"
+        source workspace_env.sh
         chmod +x infra/setup.sh
         ./infra/setup.sh
 
