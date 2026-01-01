@@ -72,6 +72,6 @@ CREATE TABLE IF NOT EXISTS teacher_jobs (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_books_meta ON books(subject, grade, board);
+CREATE INDEX idx_books_meta ON books(subject, grade_level, board);
 CREATE INDEX idx_topics_title ON topics(title);
 CREATE INDEX idx_jobs_teacher ON teacher_jobs(teacher_id);
