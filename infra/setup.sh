@@ -70,15 +70,18 @@ if ! gcloud iam service-accounts describe ${SERVICE_ACCOUNT_EMAIL} --project ${P
     # Grant Roles
     gcloud projects add-iam-policy-binding ${PROJECT_ID} \
         --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-        --role="roles/aiplatform.user"
+        --role="roles/aiplatform.user" \
+        --condition=None
     
     gcloud projects add-iam-policy-binding ${PROJECT_ID} \
         --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-        --role="roles/storage.objectViewer"
+        --role="roles/storage.objectViewer" \
+        --condition=None
         
      gcloud projects add-iam-policy-binding ${PROJECT_ID} \
         --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-        --role="roles/cloudsql.client"
+        --role="roles/cloudsql.client" \
+        --condition=None
         
     echo "✅ Service Account created and roles assigned."
 else
