@@ -1,5 +1,12 @@
 -- Database Schema for Textbook-to-Video RAG Platform
 -- Based on User Architecture
+-- WARNING: This drops existing tables to ensure clean schema update during POC.
+DROP TABLE IF EXISTS teacher_jobs CASCADE;
+DROP TABLE IF EXISTS video_library CASCADE;
+DROP TABLE IF EXISTS visual_assets CASCADE;
+DROP TABLE IF EXISTS topics CASCADE;
+DROP TABLE IF EXISTS chapters CASCADE;
+DROP TABLE IF EXISTS books CASCADE;
 
 -- 1. Books (The Source)
 CREATE TABLE IF NOT EXISTS books (
