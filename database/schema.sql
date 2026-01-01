@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS books (
     book_id VARCHAR(50) PRIMARY KEY, -- e.g. "TN_SCERT_PHY_12"
     title VARCHAR(255) NOT NULL,
     subject VARCHAR(50),
+    board VARCHAR(50),
     grade_level INTEGER,
     language VARCHAR(20) DEFAULT 'English',
     gcs_uri VARCHAR(255) NOT NULL, -- "gs://.../textbook.pdf"
