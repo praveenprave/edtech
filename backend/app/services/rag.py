@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Any
-from google.cloud import discoveryengine_v1beta as discoveryengine
+from google.cloud import discoveryengine
 from google.api_core.client_options import ClientOptions
 
 class RAGService:
