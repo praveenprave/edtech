@@ -16,11 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements (if we had a file, else simulate installation)
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
-# For now, manually install modules used in code
-RUN pip install --no-cache-dir fastapi uvicorn requests pydantic google-cloud-storage google-cloud-aiplatform python-dotenv
+# Copy requirements
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY backend/app/ app/
