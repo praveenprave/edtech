@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { BookOpen, Video, PlayCircle, CheckCircle2, ChevronRight, ChevronDown, Wand2, Settings, User, Menu, X } from 'lucide-react';
 
