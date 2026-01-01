@@ -93,6 +93,15 @@ if [ -f "database/schema.sql" ]; then
     echo "Uploading schema.sql to GCS..."
     gsutil cp database/schema.sql gs://${BUCKET_NAME}/schema.sql
     
+    # --- Fix: Grant Cloud SQL Permission to Read from Bucket ---
+    echo "Granting Cloud SQL Service Account permissions to read from bucket..."
+    SQL_SA=$(gcloud sql instances describe ${DB_INSTANCE_NAME} --project ${PROJECT_ID} --format="value(serviceAccountEmailAddress)")
+    echo "Found Cloud SQL SA: ${SQL_SA}"
+    
+    # We use 'gsutil iam ch' for easy bucket-level permission update
+    gsutil iam ch serviceAccount:${SQL_SA}:objectViewer gs://${BUCKET_NAME}
+    # -----------------------------------------------------------
+    
     echo "Importing Schema into Cloud SQL (Safe to run multiple times)..."
     gcloud sql import sql ${DB_INSTANCE_NAME} gs://${BUCKET_NAME}/schema.sql \
         --database=rag_platform \
