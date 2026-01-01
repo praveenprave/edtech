@@ -90,3 +90,6 @@ steps:
 images:
   - 'gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
