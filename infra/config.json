@@ -10,12 +10,13 @@
         "DOCAI_PROCESSOR_ID": "b8f4b3d57a243e85"
     },
     "prod": {
-        "PROJECT_ID": "prod-project-placeholder",
+        "PROJECT_ID": "poc-project-477509",
         "REGION": "us-central1",
-        "SERVICE_ACCOUNT": "sa-prod-rag@prod-project-placeholder.iam.gserviceaccount.com",
+        "SERVICE_ACCOUNT": "sa-prod-rag@poc-project-477509.iam.gserviceaccount.com",
         "MODEL_NAME": "gemini-2.0-flash",
         "FAST_MODEL_NAME": "gemini-2.0-flash",
         "DATA_STORE_ID": "textbooks-search-prod",
-        "DB_INSTANCE_NAME": "textbook-rag-db-prod"
+        "DB_INSTANCE_NAME": "textbook-rag-db-prod",
+        "DOCAI_PROCESSOR_ID": "b8f4b3d57a243e85"
     }
 }
