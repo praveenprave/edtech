@@ -8,10 +8,10 @@ DB_INSTANCE_NAME=${DB_INSTANCE_NAME:-"textbook-rag-db"}
 BUCKET_NAME="${PROJECT_ID}-assets"
 
 # Extract SA Name from email if full email provided, otherwise default
-if [[ "$_SERVICE_ACCOUNT" == *"@"* ]]; then
+if [[ "$SERVICE_ACCOUNT" == *"@"* ]]; then
     # if it's an email sa-name@project..., extract 'sa-name'
-    SERVICE_ACCOUNT_NAME=$(echo $_SERVICE_ACCOUNT | cut -d@ -f1)
-    SERVICE_ACCOUNT_EMAIL=$_SERVICE_ACCOUNT
+    SERVICE_ACCOUNT_NAME=$(echo $SERVICE_ACCOUNT | cut -d@ -f1)
+    SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT
 else
     # Default fallback
     SERVICE_ACCOUNT_NAME="sa-textbook-rag"
