@@ -40,8 +40,8 @@ class StorageService:
             
             # Auto-detect SA email if available, else construct assumption
             sa_email = getattr(credentials, "service_account_email", None)
-            if not sa_email:
-                 # Fallback for Cloud Run if auth lib doesn't populate it
+            if not sa_email or sa_email == "default":
+                 # Fallback for Cloud Run if auth lib doesn't populate it or returns 'default'
                  sa_email = f"sa-prod-rag@{self.project_id}.iam.gserviceaccount.com"
             
             print(f"🔑 Using Service Account: {sa_email}")
