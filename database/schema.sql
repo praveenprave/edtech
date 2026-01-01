@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS topics (
 );
 
 -- 3. Visual Assets: Extracted diagrams and flowcharts
-CREATE TABLE visual_assets (
+CREATE TABLE IF NOT EXISTS visual_assets (
     asset_id SERIAL PRIMARY KEY,
-    topic_id INTEGER REFERENCES topics(topic_id),
+    topic_id VARCHAR(50) REFERENCES topics(topic_id),
     image_url TEXT NOT NULL,       -- GCS URL of the cropped diagram
     description TEXT,              -- AI Generated description (Vision Agent)
     original_page_number INTEGER,
@@ -40,9 +40,9 @@ CREATE TABLE visual_assets (
 );
 
 -- 4. Video Library: The Cache for generated lessons
-CREATE TABLE video_library (
+CREATE TABLE IF NOT EXISTS video_library (
     video_id SERIAL PRIMARY KEY,
-    topic_id INTEGER REFERENCES topics(topic_id),
+    topic_id VARCHAR(50) REFERENCES topics(topic_id),
     video_url TEXT NOT NULL,       -- Final MP4 URL in GCS
     transcript TEXT,               -- Full transcript for validation
     confidence_score FLOAT,        -- 0.0 to 1.0 (Validator Agent Output)
@@ -51,11 +51,11 @@ CREATE TABLE video_library (
 );
 
 -- 5. Teacher Jobs: Tracking live requests
-CREATE TABLE teacher_jobs (
+CREATE TABLE IF NOT EXISTS teacher_jobs (
     job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     teacher_id VARCHAR(255) NOT NULL,
     topic_query VARCHAR(255),      -- Original input e.g. "Explain Plants"
-    matched_topic_id INTEGER REFERENCES topics(topic_id),
+    matched_topic_id VARCHAR(50) REFERENCES topics(topic_id),
     status VARCHAR(50) DEFAULT 'queued', -- 'queued', 'researching', 'scripting', 'rendering', 'validating', 'completed', 'failed'
     current_step VARCHAR(100),     -- For detailed UI progress bars
     result_video_id INTEGER REFERENCES video_library(video_id),

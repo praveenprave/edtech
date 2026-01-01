@@ -47,6 +47,59 @@ export default function TeacherDashboard() {
     }, 2000);
   }
 
+  // --- File Upload Logic ---
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // 1. Get Signed URL
+      // Note: In prod, replace localhost with env var or relative path if proxied
+      // We use relative path assuming Next.js rewrites or same domain
+      // BUT for this demo we assume backend is at :8000. 
+      // Correct approach: Use a defined API_BASE_URL.
+      const API_BASE_URL = "https://rag-backend-856401490977.us-central1.run.app"; // Fallback to potential cloud run url or use relative
+      // Actually, let's try relative '/api/v1' if we have a proxy, else assume direct core url
+      // For now, I'll alert the user if it fails.
+
+      const res = await fetch(`/api/v1/upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, content_type: file.type })
+      });
+
+      if (!res.ok) throw new Error("Failed to get upload URL");
+
+      const { upload_url, gcs_uri } = await res.json();
+
+      // 2. Upload to GCS
+      const uploadRes = await fetch(upload_url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type }
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload to GCS");
+
+      alert(`✅ Upload Complete!\nFile: ${file.name}\nURI: ${gcs_uri}\n\nThe Brain is now processing it. Integration pending.`);
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Upload Failed: " + err);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
 
@@ -77,6 +130,34 @@ export default function TeacherDashboard() {
           </div>
           <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-slate-500">
             <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Upload Action */}
+        <div className="px-6 pt-4 pb-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".pdf"
+          />
+          <button
+            onClick={handleUploadClick}
+            disabled={isUploading}
+            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg text-sm font-medium transition"
+          >
+            {isUploading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <BookOpen className="w-4 h-4" />
+                Upload Textbook
+              </>
+            )}
           </button>
         </div>
 

@@ -9,10 +9,13 @@ import os
 from app.services.db import DatabaseService
 from app.services.parser import DocumentParser
 from app.services.stitcher import StitcherService
+from app.services.storage import StorageService
+from pydantic import BaseModel
 
 # Initialize Services
 db_service = DatabaseService()
 stitcher_service = StitcherService()
+storage_service = StorageService() 
 # Note: Parser requires DOCAI_PROCESSOR_ID env var to work effectively
 doc_parser = DocumentParser(project_id=os.getenv("GOOGLE_CLOUD_PROJECT", "demo"))
 
@@ -106,6 +109,20 @@ async def generate_lesson(request: GenerateLessonRequest, background_tasks: Back
         status=JobStatus.QUEUED,
         message="Request queued. The Brain is analyzing your query."
     )
+
+class UploadURLRequest(BaseModel):
+    filename: str
+    content_type: str = "application/pdf"
+
+@app.post("/api/v1/upload-url")
+async def get_upload_url(request: UploadURLRequest):
+    """
+    Generates a generic Presigned URL to upload a file directly to GCS.
+    """
+    try:
+        return storage_service.generate_upload_url(request.filename, request.content_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/jobs/{job_id}", response_model=JobResponse)
 async def get_job_status(job_id: str):

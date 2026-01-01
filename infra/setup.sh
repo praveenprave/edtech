@@ -84,8 +84,24 @@ if ! gcloud iam service-accounts describe ${SERVICE_ACCOUNT_EMAIL} --project ${P
         --condition=None
         
     echo "✅ Service Account created and roles assigned."
-else
     echo "✅ Service Account exists: ${SERVICE_ACCOUNT_EMAIL}"
+fi
+
+# 5. Database Schema (Automated Migration)
+echo "Checking Database Schema..."
+if [ -f "database/schema.sql" ]; then
+    echo "Uploading schema.sql to GCS..."
+    gsutil cp database/schema.sql gs://${BUCKET_NAME}/schema.sql
+    
+    echo "Importing Schema into Cloud SQL (Safe to run multiple times)..."
+    gcloud sql import sql ${DB_INSTANCE_NAME} gs://${BUCKET_NAME}/schema.sql \
+        --database=rag_platform \
+        --project=${PROJECT_ID} \
+        --quiet
+    
+    echo "✅ Schema Import Triggered."
+else
+    echo "⚠️ database/schema.sql not found locally. Skipping schema import."
 fi
 
 echo "🎉 Infrastructure Setup Complete!"
