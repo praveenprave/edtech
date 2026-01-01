@@ -18,9 +18,9 @@ steps:
       - '-c'
       - |
         source workspace_env.sh
-        source workspace_env.sh
         chmod +x infra/setup.sh
         ./infra/setup.sh
+
 
   # -------------------------------------------------------------------------
   # Step 2: Build & Push Backend
@@ -84,8 +84,6 @@ steps:
           --allow-unauthenticated \
           --service-account $$SERVICE_ACCOUNT
 
-options:
-  logging: CLOUD_LOGGING_ONLY
 
 
 
