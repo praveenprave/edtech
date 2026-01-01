@@ -57,7 +57,7 @@ steps:
           --set-env-vars=DOCAI_PROCESSOR_ID=$$DOCAI_PROCESSOR_ID
 
   # -------------------------------------------------------------------------
-  # Step 4: Build & Push Frontend
+  # Step 4: Build & Push Frontend (Bake in Backend URL)
   # -------------------------------------------------------------------------
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -65,7 +65,16 @@ steps:
       - '-c'
       - |
         source workspace_env.sh
-        docker build -t gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA ./frontend
+        # Retrieve Backend URL to bake into the image (Fixes Next.js build-time config)
+        echo "Retrieving Backend URL for Build..."
+        BACKEND_URL=$(gcloud run services describe rag-backend --region $$REGION --format='value(status.url)')
+        echo "✅ Baking Backend URL: $$BACKEND_URL"
+        
+        docker build \
+          --build-arg BACKEND_URL=$$BACKEND_URL \
+          -t gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA \
+          ./frontend
+          
         docker push gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA
 
   # -------------------------------------------------------------------------

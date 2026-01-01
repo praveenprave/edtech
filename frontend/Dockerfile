@@ -10,6 +10,10 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Bake in Backend URL for Next.js Config
+ARG BACKEND_URL
+ENV BACKEND_URL=$BACKEND_URL
+
 # Build
 RUN npm run build
 
