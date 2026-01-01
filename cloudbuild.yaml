@@ -67,8 +67,8 @@ steps:
         source workspace_env.sh
         echo "Retrieving Backend URL..."
         BACKEND_URL=$(gcloud run services describe rag-backend --region $$REGION --format='value(status.url)')
-        echo "export BACKEND_URL=$BACKEND_URL" >> workspace_env.sh
-        echo "✅ Backend URL: $BACKEND_URL"
+        echo "export BACKEND_URL=$$BACKEND_URL" >> workspace_env.sh
+        echo "✅ Backend URL: $$BACKEND_URL"
 
   # -------------------------------------------------------------------------
   # Step 4: Build & Push Frontend
