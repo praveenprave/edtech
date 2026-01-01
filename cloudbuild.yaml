@@ -57,20 +57,6 @@ steps:
           --set-env-vars=DOCAI_PROCESSOR_ID=$$DOCAI_PROCESSOR_ID
 
   # -------------------------------------------------------------------------
-  # Step 3.5: Get Backend URL (For Frontend Proxy)
-  # -------------------------------------------------------------------------
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        source workspace_env.sh
-        echo "Retrieving Backend URL..."
-        BACKEND_URL=$(gcloud run services describe rag-backend --region $$REGION --format='value(status.url)')
-        echo "export BACKEND_URL=$$BACKEND_URL" >> workspace_env.sh
-        echo "✅ Backend URL: $$BACKEND_URL"
-
-  # -------------------------------------------------------------------------
   # Step 4: Build & Push Frontend
   # -------------------------------------------------------------------------
   - name: 'gcr.io/cloud-builders/docker'
@@ -91,6 +77,10 @@ steps:
       - '-c'
       - |
         source workspace_env.sh
+        echo "Retrieving Backend URL directly..."
+        BACKEND_URL=$(gcloud run services describe rag-backend --region $$REGION --format='value(status.url)')
+        echo "✅ Using Backend URL: $$BACKEND_URL"
+        
         gcloud run deploy rag-frontend \
           --image gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA \
           --region $$REGION \
