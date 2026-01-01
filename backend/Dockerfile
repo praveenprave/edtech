@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir fastapi uvicorn requests pydantic google-cloud-storage google-cloud-aiplatform python-dotenv
 
 # Copy application code
-COPY app/ app/
+COPY backend/app/ app/
 COPY database/ database/
 
 # Create a non-root user for security (Cloud Run best practice)
