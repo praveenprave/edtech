@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+requests
+google-cloud-storage
+google-cloud-aiplatform
+google-cloud-discoveryengine
+google-cloud-documentai
+sqlalchemy
+asyncpg
+pg8000
+python-dotenv

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+requests
+google-cloud-storage
+google-cloud-aiplatform
+google-cloud-discoveryengine
+python-dotenv

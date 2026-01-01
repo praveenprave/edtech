@@ -1,0 +1,97 @@
+steps:
+  # -------------------------------------------------------------------------
+  # Step 0: Dynamic Configuration
+  # Detects Branch (main -> prod, else -> dev) and reads infra/config.json
+  # Creates 'workspace_env.sh' with exports.
+  # -------------------------------------------------------------------------
+  - name: 'python:3.9'
+    entrypoint: 'python'
+    args: ['scripts/generate_env.py', '$BRANCH_NAME']
+
+  # -------------------------------------------------------------------------
+  # Step 1: Infrastructure Setup (Idempotent)
+  # Sources vars and runs setup.sh
+  # -------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        source workspace_env.sh
+        echo "🚀 Deploying to Environment: $TARGET_ENV"
+        chmod +x infra/setup.sh
+        ./infra/setup.sh
+
+  # -------------------------------------------------------------------------
+  # Step 2: Build & Push Backend
+  # -------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        source workspace_env.sh
+        docker build -t gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA ./backend
+        docker push gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA
+
+  # -------------------------------------------------------------------------
+  # Step 3: Deploy Backend (Cloud Run)
+  # Uses the Env Vars from config.json
+  # -------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        source workspace_env.sh
+        gcloud run deploy rag-backend \
+          --image gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA \
+          --region $REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --service-account $SERVICE_ACCOUNT \
+          --set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
+          --set-env-vars=MODEL_NAME=$MODEL_NAME \
+          --set-env-vars=FAST_MODEL_NAME=$FAST_MODEL_NAME \
+          --set-env-vars=DATA_STORE_ID=$DATA_STORE_ID
+
+  # -------------------------------------------------------------------------
+  # Step 4: Build & Push Frontend
+  # -------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        source workspace_env.sh
+        docker build -t gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA ./frontend
+        docker push gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA
+
+  # -------------------------------------------------------------------------
+  # Step 5: Deploy Frontend (Cloud Run)
+  # -------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        source workspace_env.sh
+        gcloud run deploy rag-frontend \
+          --image gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA \
+          --region $REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --service-account $SERVICE_ACCOUNT
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Note: We do NOT need substitutions for vars anymore, 
+# but BRANCH_NAME is provided automatically by the Trigger.
+substitutions:
+  _REGION: us-central1 # Fallback only
+
+
+images:
+  - 'gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA'
