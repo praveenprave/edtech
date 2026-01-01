@@ -46,15 +46,15 @@ steps:
         source workspace_env.sh
         gcloud run deploy rag-backend \
           --image gcr.io/$PROJECT_ID/rag-backend:$COMMIT_SHA \
-          --region $REGION \
+          --region $$REGION \
           --platform managed \
           --allow-unauthenticated \
-          --service-account $SERVICE_ACCOUNT \
+          --service-account $$SERVICE_ACCOUNT \
           --set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
-          --set-env-vars=MODEL_NAME=$MODEL_NAME \
-          --set-env-vars=FAST_MODEL_NAME=$FAST_MODEL_NAME \
-          --set-env-vars=DATA_STORE_ID=$DATA_STORE_ID \
-          --set-env-vars=DOCAI_PROCESSOR_ID=$DOCAI_PROCESSOR_ID
+          --set-env-vars=MODEL_NAME=$$MODEL_NAME \
+          --set-env-vars=FAST_MODEL_NAME=$$FAST_MODEL_NAME \
+          --set-env-vars=DATA_STORE_ID=$$DATA_STORE_ID \
+          --set-env-vars=DOCAI_PROCESSOR_ID=$$DOCAI_PROCESSOR_ID
 
   # -------------------------------------------------------------------------
   # Step 4: Build & Push Frontend
@@ -79,18 +79,14 @@ steps:
         source workspace_env.sh
         gcloud run deploy rag-frontend \
           --image gcr.io/$PROJECT_ID/rag-frontend:$COMMIT_SHA \
-          --region $REGION \
+          --region $$REGION \
           --platform managed \
           --allow-unauthenticated \
-          --service-account $SERVICE_ACCOUNT
+          --service-account $$SERVICE_ACCOUNT
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# Note: We do NOT need substitutions for vars anymore, 
-# but BRANCH_NAME is provided automatically by the Trigger.
-substitutions:
-  _REGION: us-central1 # Fallback only
 
 
 images:
