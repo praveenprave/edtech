@@ -1,9 +1,27 @@
 "use client";
-import React, { useState } from 'react';
-import { BookOpen, Video, PlayCircle, CheckCircle2, ChevronRight, ChevronDown, Wand2, Settings, User, Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Video, PlayCircle, CheckCircle2, ChevronRight, ChevronDown, Wand2, Settings, User, Menu, X, MessageSquare } from 'lucide-react';
+import ChatInterface from '../components/ChatInterface'; // Import Chat Component
 
-// Mock Data from "Document AI"
-const BOOK_STRUCTURE = {
+// Initial Mock Interface for Structure
+interface Topic {
+  id: string;
+  title: string;
+  cached: boolean;
+}
+
+interface Unit {
+  id: string;
+  title: string;
+  topics: Topic[];
+}
+
+interface BookStructure {
+  title: string;
+  units: Unit[];
+}
+
+const INITIAL_STRUCTURE: BookStructure = {
   title: "Physics - Grade 12 (Volume 1)",
   units: [
     {
@@ -28,6 +46,10 @@ export default function TeacherDashboard() {
   const [expandedUnits, setExpandedUnits] = useState<string[]>(['U1']);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Chat State
+
+  // Dynamic Data State
+  const [bookStructure, setBookStructure] = useState<BookStructure>(INITIAL_STRUCTURE);
 
   // Customization State
   const [teacherName, setTeacherName] = useState("Mrs. Sarah");
@@ -63,13 +85,7 @@ export default function TeacherDashboard() {
     setIsUploading(true);
     try {
       // 1. Get Signed URL
-      // Note: In prod, replace localhost with env var or relative path if proxied
-      // We use relative path assuming Next.js rewrites or same domain
-      // BUT for this demo we assume backend is at :8000. 
-      // Correct approach: Use a defined API_BASE_URL.
-      const API_BASE_URL = "https://rag-backend-856401490977.us-central1.run.app"; // Fallback to potential cloud run url or use relative
-      // Actually, let's try relative '/api/v1' if we have a proxy, else assume direct core url
-      // For now, I'll alert the user if it fails.
+      const API_BASE_URL = "https://rag-backend-856401490977.us-central1.run.app";
 
       const res = await fetch(`/api/v1/upload-url`, {
         method: 'POST',
@@ -90,11 +106,48 @@ export default function TeacherDashboard() {
 
       if (!uploadRes.ok) throw new Error("Failed to upload to GCS");
 
-      alert(`✅ Upload Complete!\nFile: ${file.name}\nURI: ${gcs_uri}\n\nThe Brain is now processing it. Integration pending.`);
+      alert(`✅ Upload to GCS Complete!\n\nTriggering Auto-Ingestion & Parsing...`);
+
+      // 3. Trigger Backend Processing (Auto-Ingest + Parsing)
+      const processRes = await fetch(`/api/v1/process-upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gcs_uri: gcs_uri })
+      });
+
+      if (!processRes.ok) throw new Error("Backend processing failed");
+
+      const processData = await processRes.json();
+      console.log("Structure Parsed:", processData.structure);
+
+      // 4. Update UI with Dynamic Topics
+      // Mapping Backend format to UI format might be needed if they differ.
+      // Assuming Backend returns 'chapters' which maps to 'units'.
+      if (processData.structure && processData.structure.chapters) {
+        const newUnits: Unit[] = processData.structure.chapters.map((ch: any) => ({
+          id: ch.chapter_id,
+          title: ch.title,
+          topics: ch.topics.map((t: any) => ({
+            id: t.topic_id,
+            title: t.title,
+            cached: false // Newly uploaded content needs generation
+          }))
+        }));
+
+        setBookStructure({
+          title: processData.structure.title || file.name,
+          units: newUnits
+        });
+
+        // Expand first unit by default
+        if (newUnits.length > 0) setExpandedUnits([newUnits[0].id]);
+      }
+
+      alert("✅ Textbook Processed! Topics updated from uploaded file.");
 
     } catch (err) {
       console.error(err);
-      alert("❌ Upload Failed: " + err);
+      alert("❌ Upload/Processing Failed: " + err);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -102,7 +155,20 @@ export default function TeacherDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden relative">
+
+      <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+      {/* Floating Chat Toggle (Visible on Desktop) */}
+      {!isChatOpen && (
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="fixed bottom-6 right-6 z-40 bg-brand-600 text-white p-4 rounded-full shadow-lg hover:bg-brand-700 transition-transform transform hover:scale-105 flex items-center gap-2"
+        >
+          <MessageSquare className="w-6 h-6" />
+          <span className="font-semibold hidden md:inline">Ask AI</span>
+        </button>
+      )}
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -113,7 +179,6 @@ export default function TeacherDashboard() {
       )}
 
       {/* Sidebar: Customization Panel */}
-      {/* Responsive Logic: Fixed Sidebar on Desktop, Drawer on Mobile */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 transform 
         md:relative md:translate-x-0 
@@ -151,7 +216,7 @@ export default function TeacherDashboard() {
             {isUploading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Uploading...
+                Processing...
               </>
             ) : (
               <>
@@ -251,11 +316,11 @@ export default function TeacherDashboard() {
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium border border-green-200 whitespace-nowrap">
                 Document AI Parsed
               </span>
-              <h2 className="text-lg font-semibold text-slate-800 truncate max-w-[200px] lg:max-w-none">{BOOK_STRUCTURE.title}</h2>
+              <h2 className="text-lg font-semibold text-slate-800 truncate max-w-[200px] lg:max-w-none">{bookStructure.title}</h2>
             </div>
 
             {/* Mobile Title Replacement */}
-            <h2 className="md:hidden text-sm font-semibold text-slate-800 truncate">{BOOK_STRUCTURE.title}</h2>
+            <h2 className="md:hidden text-sm font-semibold text-slate-800 truncate">{bookStructure.title}</h2>
           </div>
 
           <div className="text-xs md:text-sm text-slate-500 hidden sm:block">
@@ -272,7 +337,7 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="space-y-4 pb-24 md:pb-0">
-              {BOOK_STRUCTURE.units.map((unit) => (
+              {bookStructure.units.map((unit) => (
                 <div key={unit.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                   {/* Unit Header */}
                   <div

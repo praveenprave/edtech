@@ -26,6 +26,44 @@ class RAGService:
             except Exception as e:
                 print(f"⚠️ RAG Service Warning: Could not init Vertex AI Client: {e}")
 
+    def import_documents(self, gcs_uri: str):
+        """
+        Triggers an immediate import of the document from GCS to the Data Store.
+        """
+        print(f"📥 Triggering Vertex AI Import for: {gcs_uri}")
+        if not self.client:
+            print("⚠️ Client not ready, skipping import.")
+            return
+
+        try:
+            # Import relies on the whole bucket or prefix
+            # Vertex AI 'import_documents' typically takes a list of GcsSource
+            # Here we just re-sync the specific file if possible, or usually we point to the gcs source.
+            # Best pattern: Import the single file.
+            
+            import_request = discoveryengine.ImportDocumentsRequest(
+                parent=self.client.branch_path(
+                    project=self.project_id,
+                    location=self.location,
+                    data_store=self.data_store_id,
+                    branch="default_branch",
+                ),
+                gcs_source=discoveryengine.GcsSource(
+                    input_uris=[gcs_uri], data_schema="content"
+                ),
+                # PUBLISH to make it searchable immediately (Auto-Refresh)
+                reconciliation_mode=discoveryengine.ImportDocumentsRequest.ReconciliationMode.INCREMENTAL
+            )
+
+            # We use a long-running operation
+            operation = self.client.import_documents(request=import_request)
+            print(f"⏳ Import Operation Started: {operation.operation.name}")
+            return operation.operation.name
+            
+        except Exception as e:
+            print(f"❌ Import Failed: {e}")
+            raise e
+
     def search(self, query: str) -> str:
         """
         Searches the Vector DB for relevant textbook content.

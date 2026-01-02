@@ -117,6 +117,55 @@ class UploadURLRequest(BaseModel):
     filename: str
     content_type: str = "application/pdf"
 
+class ProcessFileRequest(BaseModel):
+    gcs_uri: str
+
+@app.post("/api/v1/process-upload")
+async def process_upload(request: ProcessFileRequest):
+    """
+    Triggers 1. Auto-Ingest to Vertex AI (Index)
+             2. Document AI Parsing (Topic Extraction)
+    """
+    print(f"🔄 Processing Upload: {request.gcs_uri}")
+    try:
+        # 1. Trigger Auto-Ingestion (Fire & Forget or Wait?)
+        # For responsiveness, we can background task it, 
+        # BUT user wants to know when "Indexing" is done.
+        # Vertex Import is long-running. We'll start it and return success.
+        rag_service = RAGService(project_id=os.getenv("GOOGLE_CLOUD_PROJECT"))
+        rag_service.import_documents(request.gcs_uri)
+        
+        # 2. Trigger Parsing (Topic Extraction)
+        # This returns the structure immediately (or mocked)
+        structure = doc_parser.extract_hierarchy(request.gcs_uri)
+        
+        return {
+            "message": "Ingestion started & Structure parsed.",
+            "structure": structure
+        }
+    except Exception as e:
+        print(f"❌ Processing Failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/chat", response_model=ChatResponse)
+async def chat_endpoint(request: ChatRequest):
+    """
+    Interactive Chat with RAG Context.
+    """
+    try:
+        agent = ResearchAgent()
+        # We can pass history to context if needed, 
+        # for now we're doing single-turn RAG for simplicity.
+        response_text = agent.research(request.message)
+        
+        return ChatResponse(
+            reply=response_text,
+            sources=["Textbook (RAG)"] 
+        )
+    except Exception as e:
+        print(f"❌ Chat Failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/v1/upload-url")
 async def get_upload_url(request: UploadURLRequest):
     """

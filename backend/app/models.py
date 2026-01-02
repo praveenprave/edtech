@@ -38,3 +38,11 @@ class ChapterItem(BaseModel):
 class BookStructure(BaseModel):
     book_id: str
     chapters: List[ChapterItem]
+
+class ChatRequest(BaseModel):
+    message: str
+    history: List[dict] = [] # [{"role": "user", "content": "..."}]
+
+class ChatResponse(BaseModel):
+    reply: str
+    sources: List[str] = []
