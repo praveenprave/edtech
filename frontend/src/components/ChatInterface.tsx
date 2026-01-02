@@ -42,7 +42,7 @@ export default function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             const res = await fetch('/api/v1/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMsg, history: [] })
+                body: JSON.stringify({ message: userMsg, history: messages })
             });
 
             if (!res.ok) throw new Error("Failed to fetch response");

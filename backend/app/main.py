@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from app.models import GenerateLessonRequest, JobResponse, JobStatus, ChatRequest, ChatResponse, UploadURLRequest, ProcessFileRequest
 from app.services.heygen import HeyGenClient
-from app.agents import ResearchAgent, ScriptwriterAgent, ValidationAgent
+from app.agents import ResearchAgent, ScriptwriterAgent, ValidationAgent, ChatAgent
 import uuid
 import os
 
@@ -148,10 +148,10 @@ async def chat_endpoint(request: ChatRequest):
     Interactive Chat with RAG Context.
     """
     try:
-        agent = ResearchAgent()
+        agent = ChatAgent()
         # We can pass history to context if needed, 
         # for now we're doing single-turn RAG for simplicity.
-        response_text = agent.research(request.message, request.history)
+        response_text = agent.chat(request.message, request.history)
         
         return ChatResponse(
             reply=response_text,
