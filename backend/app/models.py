@@ -46,3 +46,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     sources: List[str] = []
+
+class UploadURLRequest(BaseModel):
+    filename: str
+    content_type: str = "application/pdf"
+
+class ProcessFileRequest(BaseModel):
+    gcs_uri: str

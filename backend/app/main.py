@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
-from app.models import GenerateLessonRequest, JobResponse, JobStatus
+from app.models import GenerateLessonRequest, JobResponse, JobStatus, ChatRequest, ChatResponse, UploadURLRequest, ProcessFileRequest
 from app.services.heygen import HeyGenClient
 from app.agents import ResearchAgent, ScriptwriterAgent, ValidationAgent
 import uuid
@@ -113,12 +113,7 @@ async def generate_lesson(request: GenerateLessonRequest, background_tasks: Back
         message="Request queued. The Brain is analyzing your query."
     )
 
-class UploadURLRequest(BaseModel):
-    filename: str
-    content_type: str = "application/pdf"
 
-class ProcessFileRequest(BaseModel):
-    gcs_uri: str
 
 @app.post("/api/v1/process-upload")
 async def process_upload(request: ProcessFileRequest):
