@@ -151,7 +151,7 @@ async def chat_endpoint(request: ChatRequest):
         agent = ResearchAgent()
         # We can pass history to context if needed, 
         # for now we're doing single-turn RAG for simplicity.
-        response_text = agent.research(request.message)
+        response_text = agent.research(request.message, request.history)
         
         return ChatResponse(
             reply=response_text,

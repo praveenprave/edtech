@@ -41,21 +41,69 @@ class ResearchAgent(Agent):
         )
         self.rag = RAGService(project_id=PROJECT_ID)
 
-    def research(self, query: str) -> str:
-        # 1. Retrieve from Vector DB
-        context = self.rag.search(query)
+    from typing import List, Dict
+    def research(self, query: str, history: List[dict] = []) -> str:
+        # 1. Rewrite Query if needed (Contextual RAG)
+        search_query = self._rewrite_query(query, history)
         
-        # 2. Synthesize with Gemini
+        # 2. Retrieve from Vector DB
+        context = self.rag.search(search_query)
+        
+        # 3. Synthesize with Gemini (with History)
+        history_text = ""
+        if history:
+             for turn in history[-3:]:
+                 role = turn.get("role", "user")
+                 content = turn.get("content", "")
+                 history_text += f"{role}: {content}\n"
+
         prompt = f"""
-        User Query: {query}
+        You are an expert Tutor. Answer the query based on the Context and Conversation History.
+        
+        Conversation History:
+        {history_text}
+        
+        Current Query: {query}
         
         Retrieved Textbook Context:
         {context}
         
-        Task: Create a detailed Fact Brief for a 5-minute video lesson.
-        Include definitions, key formulas, and examples.
+        Task: Provide a helpful, accurate answer.
+        If the query is "explain more", use the history to understand what to explain.
         """
         return self.generate(prompt)
+
+    def _rewrite_query(self, query: str, history: List[dict]) -> str:
+        """
+        Rewrites the user query to be standalone based on history.
+        """
+        if not history:
+            return query
+            
+        # Quick check for context-dependent queries
+        # In production, use an LLM call here. 
+        # For efficiency, we'll try a simple heuristic or a fast LLM call.
+        
+        # Heuristic: If query length < 15 chars and history exists, likely dependent.
+        if len(query) < 20 or "explain" in query.lower() or "what is it" in query.lower():
+             # Use the Model to rewrite (Cost checking: negligible for this demo)
+             prompt = f"""
+             Rewrite the last user query to be a standalone search query based on history.
+             History: {history[-1].get('content')}
+             Last Query: {query}
+             Standalone Query:"""
+             
+             # We can use the base agent's generate, but it might be overkill. 
+             # Let's just append the previous user message for now as a naive "rewrite"
+             # Better: "Previous Topic + Current Query"
+             
+             # Naive Fallback for speed: 
+             # If "explain more", append previous user query.
+             last_user_msg = next((m['content'] for m in reversed(history) if m['role'] == 'user'), "")
+             print(f"🔄 Rewriting Query: '{query}' using context '{last_user_msg[:20]}...'")
+             return f"{last_user_msg} {query}"
+             
+        return query
 
 class ScriptwriterAgent(Agent):
     def __init__(self):
