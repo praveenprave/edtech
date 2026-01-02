@@ -108,7 +108,9 @@ class RAGService:
                 data = result.document.derived_struct_data
                 if "snippets" in data:
                      for snippet in data["snippets"]:
-                         context += f"- {snippet.get('snippet', '')}\n"
+                         text = snippet.get('snippet', '')
+                         print(f"📄 Retrieved Snippet: {text[:200]}...") # Log for debugging
+                         context += f"- {text}\n"
             
             return context if context else "No relevant textbook content found."
 
