@@ -54,7 +54,8 @@ steps:
           --set-env-vars=MODEL_NAME=$$MODEL_NAME \
           --set-env-vars=FAST_MODEL_NAME=$$FAST_MODEL_NAME \
           --set-env-vars=DATA_STORE_ID=$$DATA_STORE_ID \
-          --set-env-vars=DOCAI_PROCESSOR_ID=$$DOCAI_PROCESSOR_ID
+          --set-env-vars=DOCAI_PROCESSOR_ID=$$DOCAI_PROCESSOR_ID \
+          --set-env-vars=SERVICE_ACCOUNT_EMAIL=$$SERVICE_ACCOUNT
 
   # -------------------------------------------------------------------------
   # Step 4: Build & Push Frontend (Bake in Backend URL)
@@ -107,3 +108,4 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'

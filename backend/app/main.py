@@ -1,5 +1,8 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 from app.models import GenerateLessonRequest, JobResponse, JobStatus
 from app.services.heygen import HeyGenClient
 from app.agents import ResearchAgent, ScriptwriterAgent, ValidationAgent
